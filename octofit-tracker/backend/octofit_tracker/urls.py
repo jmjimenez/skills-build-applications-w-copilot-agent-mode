@@ -32,10 +32,11 @@ router.register(r'leaderboard', views.LeaderboardViewSet)
 def api_root(request, format=None):
     return Response({
         'users': request.build_absolute_uri('/users/'),
-        'teams': request.build_absolute_uri('/teams/'),
-        'activities': request.build_absolute_uri('/activities/'),
-        'workouts': request.build_absolute_uri('/workouts/'),
-        'leaderboard': request.build_absolute_uri('/leaderboard/'),
+    # Use CODESPACE_NAME env variable for endpoint URLs
+    'teams': _build_api_url('teams/'),
+    'activities': _build_api_url('activities/'),
+    'workouts': _build_api_url('workouts/'),
+    'leaderboard': _build_api_url('leaderboard/'),
     })
 
 urlpatterns = [
@@ -43,3 +44,15 @@ urlpatterns = [
     path('', api_root, name='api_root'),
     path('', include(router.urls)),
 ]
+
+# Helper function to build API URLs using CODESPACE_NAME
+import os
+from django.http import HttpRequest
+
+def _build_api_url(path: str, request: HttpRequest = None) -> str:
+    codespace = os.environ.get('CODESPACE_NAME')
+    if codespace:
+        return f'https://{codespace}-8000.app.github.dev/api/{path}'
+    if request:
+        return request.build_absolute_uri(f'/api/{path}')
+    return f'http://localhost:8000/api/{path}'
